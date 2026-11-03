@@ -28,11 +28,18 @@ void ComputerSeeker::start(int timeout)
     //
     // NB: We don't do this unconditionally because it will wipe out the user's
     // manual address if they pass another reachable hostname/address.
-    if (!findMatchingComputer()) {
+    NvComputer* known = findMatchingComputer();
+    if (!known) {
         m_ComputerManager->addNewHostManually(m_ComputerName);
     }
 
     m_ComputerManager->startPolling();
+
+    // Already online (polled before we started): no state change will come, so
+    // report it now (queued, once the caller has connected to computerFound)
+    if (known && isOnline(known)) {
+        QTimer::singleShot(0, this, [this, known]() { onComputerUpdated(known); });
+    }
 }
 
 void ComputerSeeker::onComputerUpdated(NvComputer *computer)
