@@ -19,6 +19,15 @@
       ],
       "line": "build",
       "timeout": 45
+    },
+    {
+      "name": "clipboard-unit",
+      "run": "mkdir -p build/tests-clipboard && cd build/tests-clipboard && qmake6 ../../tests/clipboardsync CONFIG+=sdk_no_version_check >/dev/null && make -s && ./tst_clipboardsync",
+      "inputs": [
+        "app/streaming/clipboardsyncstate.*",
+        "tests/clipboardsync/**"
+      ],
+      "timeout": 10
     }
   ]
 }

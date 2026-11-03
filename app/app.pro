@@ -195,6 +195,8 @@ SOURCES += \
     streaming/input/mouse.cpp \
     streaming/input/reltouch.cpp \
     streaming/session.cpp \
+    streaming/clipboardsync.cpp \
+    streaming/clipboardsyncstate.cpp \
     streaming/audio/audio.cpp \
     streaming/audio/capture/microphonecapture.cpp \
     streaming/audio/capture/micinput.cpp \
@@ -237,6 +239,8 @@ HEADERS += \
     settings/autoframerate.h \
     streaming/input/input.h \
     streaming/session.h \
+    streaming/clipboardsync.h \
+    streaming/clipboardsyncstate.h \
     streaming/audio/capture/microphonecapture.h \
     streaming/audio/capture/micinput.h \
     streaming/audio/capture/micpermission.h \
@@ -437,6 +441,7 @@ macx {
 
     SOURCES += \
         streaming/audio/capture/micpermission_mac.mm \
+        streaming/clipboardsync_mac.mm \
         streaming/audio/capture/micinput_mac.mm \
         streaming/quitduringstream.cpp \
         gui/nativechrome_mac.mm \

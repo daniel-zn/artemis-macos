@@ -403,6 +403,38 @@ NvHTTP::getBoxArt(int appId)
     return image;
 }
 
+// Sunshine without Apollo's clipboard answers unknown paths with HTTP 200 and
+// <root status_code="404">: never take that for clipboard text.
+static void throwIfXmlError(const QByteArray& body)
+{
+    if (body.startsWith("<?xml") && body.contains("<root") && body.contains("status_code=\"") &&
+            !body.contains("status_code=\"200\"")) {
+        throw GfeHttpResponseException(404, "Host has no clipboard endpoint");
+    }
+}
+
+QByteArray
+NvHTTP::getClipboardText(int timeoutMs)
+{
+    QNetworkReply* reply = openConnection(m_BaseUrlHttps, "actions/clipboard", "type=text",
+                                          timeoutMs, NvLogLevel::NVLL_ERROR);
+    QByteArray body = reply->readAll();
+    delete reply;
+    throwIfXmlError(body);
+    return body;
+}
+
+void
+NvHTTP::setClipboardText(const QByteArray& utf8Text, int timeoutMs)
+{
+    QNetworkReply* reply = openConnection(m_BaseUrlHttps, "actions/clipboard", "type=text",
+                                          timeoutMs, NvLogLevel::NVLL_ERROR, &utf8Text);
+    QByteArray body = reply->readAll();
+    delete reply;
+    // Apollo answers an empty 200
+    throwIfXmlError(body);
+}
+
 QByteArray
 NvHTTP::getXmlStringFromHex(QString xml,
                             QString tagName)
@@ -483,7 +515,8 @@ NvHTTP::openConnection(QUrl baseUrl,
                        QString command,
                        QString arguments,
                        int timeoutMs,
-                       NvLogLevel logLevel)
+                       NvLogLevel logLevel,
+                       const QByteArray* postBody)
 {
     // Port must be set
     Q_ASSERT(baseUrl.port(0) != 0);
@@ -515,7 +548,14 @@ NvHTTP::openConnection(QUrl baseUrl,
 #endif
 
     auto sslErrorsConnection = connect(m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
-    QNetworkReply* reply = m_Nam->get(request);
+    QNetworkReply* reply;
+    if (postBody != nullptr) {
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "text/plain; charset=utf-8");
+        reply = m_Nam->post(request, *postBody);
+    }
+    else {
+        reply = m_Nam->get(request);
+    }
 
     // Run the request with a timeout if requested
     QEventLoop loop;

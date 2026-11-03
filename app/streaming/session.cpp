@@ -31,12 +31,14 @@
 #define SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE 103
 #define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
 #define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
+#define SDL_CODE_CLIPBOARD_FETCHED 106
 
 #include <openssl/rand.h>
 
 #ifdef Q_OS_DARWIN
 #include <SDL_syswm.h>
 #include "streaming/quitduringstream.h"
+#include "streaming/clipboardsync.h"
 #include "gui/nativechrome.h"
 #endif
 
@@ -2083,6 +2085,13 @@ void Session::exec()
     }));
 #endif
 
+    // Shared clipboard (text) with Apollo; GFE has no such thing
+    std::unique_ptr<ClipboardSync> clipboard;
+    if (m_Preferences->clipboardSync && !m_Computer->isNvidiaServerSoftware) {
+        clipboard.reset(new ClipboardSync(m_Computer, SDL_CODE_CLIPBOARD_FETCHED));
+        clipboard->streamStarted();
+    }
+
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
@@ -2165,6 +2174,11 @@ void Session::exec()
                 m_InputHandler->setAdaptiveTriggers((uint16_t)(uintptr_t)event.user.data1,
                                                     (DualSenseOutputReport *)event.user.data2);
                 break;
+            case SDL_CODE_CLIPBOARD_FETCHED:
+                if (clipboard) {
+                    clipboard->applyFetched();
+                }
+                break;
             default:
                 SDL_assert(false);
             }
@@ -2178,12 +2192,18 @@ void Session::exec()
                     m_AudioMuted = true;
                 }
                 m_InputHandler->notifyFocusLost();
+                if (clipboard) {
+                    clipboard->focusLost();
+                }
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
                 if (m_Preferences->muteOnFocusLoss) {
                     m_AudioMuted = false;
                 }
                 m_InputHandler->notifyFocusGained();
+                if (clipboard) {
+                    clipboard->focusGained();
+                }
                 break;
             case SDL_WINDOWEVENT_LEAVE:
                 m_InputHandler->notifyMouseLeave();
@@ -2378,6 +2398,14 @@ void Session::exec()
         case SDL_KEYDOWN:
             presence.runCallbacks();
             m_InputHandler->handleKeyEvent(&event.key);
+            if (clipboard && event.type == SDL_KEYDOWN) {
+                clipboard->keyDown(event.key);
+            }
+            break;
+        case SDL_CLIPBOARDUPDATE:
+            if (clipboard) {
+                clipboard->localClipboardChanged((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_INPUT_FOCUS) != 0);
+            }
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
@@ -2437,6 +2465,14 @@ void Session::exec()
     }
 
 DispatchDeferredCleanup:
+    // Bring over what was last copied on the host while it still answers
+    if (clipboard) {
+        if (!m_UnexpectedTermination) {
+            clipboard->streamEnding();
+        }
+        clipboard.reset();
+    }
+
 #ifdef Q_OS_DARWIN
     // The stream is ending; from here on Cmd+Q quits Artemis as usual
     quitFilter.reset();

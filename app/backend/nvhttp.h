@@ -178,6 +178,16 @@ public:
     QImage
     getBoxArt(int appId);
 
+    // Apollo's shared clipboard (plain UTF-8 text, client must be streaming).
+    // Throws like the other requests: 401 (no clipboard permission) comes back as
+    // QtNetworkReplyException(AuthenticationRequiredError); a host without the
+    // endpoint (Sunshine's "200 with an XML 404") as GfeHttpResponseException(404).
+    QByteArray
+    getClipboardText(int timeoutMs);
+
+    void
+    setClipboardText(const QByteArray& utf8Text, int timeoutMs);
+
     static
     QVector<NvDisplayMode>
     getDisplayModeList(QString serverInfo);
@@ -193,7 +203,8 @@ private:
                    QString command,
                    QString arguments,
                    int timeoutMs,
-                   NvLogLevel logLevel);
+                   NvLogLevel logLevel,
+                   const QByteArray* postBody = nullptr);
 
     NvAddress m_Address;
     QNetworkAccessManager* m_Nam;

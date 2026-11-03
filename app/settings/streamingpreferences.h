@@ -181,6 +181,7 @@ public:
     Q_PROPERTY(UIDisplayMode uiDisplayMode MEMBER uiDisplayMode NOTIFY uiDisplayModeChanged)
     Q_PROPERTY(bool swapMouseButtons MEMBER swapMouseButtons NOTIFY mouseButtonsChanged)
     Q_PROPERTY(bool muteOnFocusLoss MEMBER muteOnFocusLoss NOTIFY muteOnFocusLossChanged)
+    Q_PROPERTY(bool clipboardSync MEMBER clipboardSync NOTIFY clipboardSyncChanged)
     Q_PROPERTY(bool backgroundGamepad MEMBER backgroundGamepad NOTIFY backgroundGamepadChanged)
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
@@ -233,6 +234,7 @@ public:
     bool micNoiseSuppression;
     bool swapMouseButtons;
     bool muteOnFocusLoss;
+    bool clipboardSync;
     bool backgroundGamepad;
     bool reverseScrollDirection;
     bool swapFaceButtons;
@@ -289,6 +291,7 @@ signals:
     void microphoneBlockedChanged();
     void mouseButtonsChanged();
     void muteOnFocusLossChanged();
+    void clipboardSyncChanged();
     void backgroundGamepadChanged();
     void reverseScrollDirectionChanged();
     void swapFaceButtonsChanged();

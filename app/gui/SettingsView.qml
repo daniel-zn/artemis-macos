@@ -1424,6 +1424,22 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!")
                 }
+
+                CheckBox {
+                    id: clipboardSyncCheck
+                    width: parent.width
+                    text: qsTr("Share copied text with the host PC")
+                    font.pointSize: settingsPage.bodyPointSize
+                    checked: StreamingPreferences.clipboardSync
+                    onCheckedChanged: {
+                        StreamingPreferences.clipboardSync = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("While streaming from Apollo, text you copy here can be pasted on the host PC, and text copied on the host PC can be pasted here.")
+                }
             }
         }
 
