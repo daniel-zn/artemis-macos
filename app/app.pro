@@ -193,6 +193,7 @@ SOURCES += \
     streaming/input/input.cpp \
     streaming/input/keyboard.cpp \
     streaming/input/mouse.cpp \
+    streaming/input/automousemode.cpp \
     streaming/input/reltouch.cpp \
     streaming/session.cpp \
     streaming/clipboardsync.cpp \
@@ -238,6 +239,7 @@ HEADERS += \
     settings/streamingpreferences.h \
     settings/autoframerate.h \
     streaming/input/input.h \
+    streaming/input/automousemode.h \
     streaming/session.h \
     streaming/clipboardsync.h \
     streaming/clipboardsyncstate.h \

@@ -28,6 +28,15 @@
         "tests/clipboardsync/**"
       ],
       "timeout": 10
+    },
+    {
+      "name": "automouse-unit",
+      "run": "mkdir -p build/tests-automouse && cd build/tests-automouse && qmake6 ../../tests/automouse CONFIG+=sdk_no_version_check >/dev/null && make -s && ./tst_automouse",
+      "inputs": [
+        "app/streaming/input/automousemode.*",
+        "tests/automouse/**"
+      ],
+      "timeout": 10
     }
   ]
 }

@@ -303,6 +303,11 @@ static PSDP_OPTION getAttributesList(char*urlSafeAddr) {
         snprintf(payloadStr, sizeof(payloadStr), "%" PRIu32, EncryptionFeaturesEnabled);
         err |= addAttributeString(&optionHead, "x-ss-general.encryptionEnabled", payloadStr);
 
+        // Ask an Apollo host for cursor capture messages
+        if (StreamConfig.enableCursorState && HostSupportsCursorState) {
+            err |= addAttributeString(&optionHead, CURSOR_STATE_ENABLE_ATTRIBUTE, "1");
+        }
+
         // Enable YUV444 if requested
         if (NegotiatedVideoFormat & VIDEO_FORMAT_MASK_YUV444) {
             err |= addAttributeString(&optionHead, "x-ss-video[0].chromaSamplingType", "1");

@@ -32,6 +32,7 @@
 #define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
 #define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
 #define SDL_CODE_CLIPBOARD_FETCHED 106
+#define SDL_CODE_HOST_CURSOR_CAPTURED 107
 
 #include <openssl/rand.h>
 
@@ -74,7 +75,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clRumbleTriggers,
     Session::clSetMotionEventState,
     Session::clSetControllerLED,
-    Session::clSetAdaptiveTriggers
+    Session::clSetAdaptiveTriggers,
+    Session::clSetHostCursorCaptured
 };
 
 Session* Session::s_ActiveSession;
@@ -263,6 +265,16 @@ void Session::clSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g
     setControllerLEDEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
     setControllerLEDEvent.user.data2 = (void*)(uintptr_t)(r << 16 | g << 8 | b);
     SDL_PushEvent(&setControllerLEDEvent);
+}
+
+void Session::clSetHostCursorCaptured(bool captured)
+{
+    // Mouse mode changes belong on the main thread
+    SDL_Event event = {};
+    event.type = SDL_USEREVENT;
+    event.user.code = SDL_CODE_HOST_CURSOR_CAPTURED;
+    event.user.data1 = (void*)(uintptr_t)captured;
+    SDL_PushEvent(&event);
 }
 
 void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlags, uint8_t typeLeft, uint8_t typeRight, uint8_t *left, uint8_t *right){
@@ -741,6 +753,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
     // Only the first 4 bytes are populated in the RI key IV
     RAND_bytes(reinterpret_cast<unsigned char*>(m_StreamConfig.remoteInputAesIv), 4);
     m_StreamConfig.enableMic = m_Preferences->enableMicrophone;
+    m_StreamConfig.enableCursorState = m_Preferences->autoMouseMode;
 
     switch (m_Preferences->audioConfig)
     {
@@ -2178,6 +2191,9 @@ void Session::exec()
                 if (clipboard) {
                     clipboard->applyFetched();
                 }
+                break;
+            case SDL_CODE_HOST_CURSOR_CAPTURED:
+                m_InputHandler->notifyHostCursorCaptured(event.user.data1 != nullptr);
                 break;
             default:
                 SDL_assert(false);

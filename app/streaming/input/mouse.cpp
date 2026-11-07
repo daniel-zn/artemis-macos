@@ -43,6 +43,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             // event to the host when clicking into our window (since
             // the pressed event was consumed by this code).
             setCaptureActive(true);
+            m_AutoMouse.userChangedCapture();
         }
 
         // Not capturing
@@ -332,5 +333,44 @@ void SdlInputHandler::updatePointerRegionLock()
 #else
         SDL_SetWindowGrab(m_Window, SDL_FALSE);
 #endif
+    }
+}
+
+void SdlInputHandler::notifyHostCursorCaptured(bool captured)
+{
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Host cursor is %s", captured ? "captured by a game" : "free");
+
+    // Is the user in the stream right now, or using another app or screen?
+    bool pointerInStream = false;
+    if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_INPUT_FOCUS) {
+        int globalX, globalY, windowX, windowY;
+        SDL_GetGlobalMouseState(&globalX, &globalY);
+        SDL_GetWindowPosition(m_Window, &windowX, &windowY);
+        pointerInStream = isMouseInVideoRegion(globalX - windowX, globalY - windowY);
+    }
+
+    AutoMouseMode::Step step = m_AutoMouse.hostCursorChanged(captured, m_AbsoluteMouseMode,
+                                                             isCaptureActive(), pointerInStream);
+    if (!step.changeMode) {
+        return;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Automatic mouse mode: %s", step.absolute ? "absolute" : "relative");
+
+    switch (step.capture) {
+    case AutoMouseMode::Capture::Capture:
+        setCaptureActive(false);
+        m_AbsoluteMouseMode = step.absolute;
+        setCaptureActive(true);
+        break;
+    case AutoMouseMode::Capture::Release:
+        setCaptureActive(false);
+        m_AbsoluteMouseMode = step.absolute;
+        break;
+    case AutoMouseMode::Capture::Keep:
+        m_AbsoluteMouseMode = step.absolute;
+        break;
     }
 }

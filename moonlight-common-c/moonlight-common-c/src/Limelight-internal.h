@@ -38,6 +38,7 @@ extern uint16_t ControlPortNumber;
 extern uint16_t AudioPortNumber;
 extern uint16_t VideoPortNumber;
 extern uint16_t MicPortNumber;
+extern bool HostSupportsCursorState;
 
 extern SS_PING AudioPingPayload;
 extern SS_PING VideoPingPayload;
@@ -73,6 +74,19 @@ extern uint32_t EncryptionFeaturesEnabled;
 #define MIC_PACKET_TYPE_OPUS 0x61
 #define MIC_GCM_TAG_LENGTH 16
 #define MAX_MIC_PACKET_SIZE 1400
+
+// Host cursor capture state (Apollo extension, danielzn-Apollo src/cursor_state.h). Hosts
+// advertise support with CURSOR_STATE_SDP_ATTRIBUTE in the RTSP DESCRIBE response; a client
+// with enableCursorState asks for it with CURSOR_STATE_ENABLE_ATTRIBUTE:1 in its ANNOUNCE. The
+// host then sends a CURSOR_STATE_PACKET_TYPE control message (encrypted like all others) when
+// the control stream connects and whenever a game captures or frees the cursor:
+//   uint8_t version (1); uint8_t flags (bit 0: captured)
+// Unknown versions are ignored.
+#define CURSOR_STATE_SDP_ATTRIBUTE "a=x-apollo-cursor:1"
+#define CURSOR_STATE_ENABLE_ATTRIBUTE "x-apollo-cursor.enable"
+#define CURSOR_STATE_PACKET_TYPE 0x3080
+#define CURSOR_STATE_VERSION 1
+#define CURSOR_STATE_FLAG_CAPTURED 0x01
 
 // ENet channel ID values
 #define CTRL_CHANNEL_GENERIC      0x00

@@ -1292,6 +1292,19 @@ static void controlReceiveThreadFunc(void* context) {
                 hdrEnabled = (enableByte != 0);
             }
 
+            if (ctlHdr->type == CURSOR_STATE_PACKET_TYPE && encryptedControlStream &&
+                    StreamConfig.enableCursorState && HostSupportsCursorState) {
+                BYTE_BUFFER bb;
+                uint8_t version, flags;
+
+                BbInitializeWrappedBuffer(&bb, (char*)ctlHdr, sizeof(*ctlHdr), packetLength - sizeof(*ctlHdr), BYTE_ORDER_LITTLE);
+                if (BbGet8(&bb, &version) && BbGet8(&bb, &flags) && version == CURSOR_STATE_VERSION) {
+                    ListenerCallbacks.setHostCursorCaptured((flags & CURSOR_STATE_FLAG_CAPTURED) != 0);
+                }
+                free(ctlHdr);
+                continue;
+            }
+
             // Process client callbacks in a separate thread
             if (needsAsyncCallback(ctlHdr->type)) {
                 queueAsyncCallback(ctlHdr, packetLength);

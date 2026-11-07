@@ -1790,6 +1790,24 @@ Flickable {
                                   qsTr("NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.")
                 }
 
+                CheckBox {
+                    id: autoMouseCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Switch mouse mode automatically for games")
+                    font.pointSize: settingsPage.bodyPointSize
+                    checked: StreamingPreferences.autoMouseMode
+                    onCheckedChanged: {
+                        StreamingPreferences.autoMouseMode = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("With an Apollo host, the mouse stays in the stream while a game uses it to look around, and can leave the window the rest of the time.") + " " +
+                                  qsTr("Ctrl+Alt+Shift+M switches back to manual for the rest of the stream.")
+                }
+
                 Row {
                     spacing: 5
                     width: parent.width

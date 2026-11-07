@@ -954,6 +954,7 @@ int performRtspHandshake(PSERVER_INFORMATION serverInfo) {
     controlStreamId = APP_VERSION_AT_LEAST(7, 1, 431) ? "streamid=control/13/0" : "streamid=control/1/0";
     AudioEncryptionEnabled = false;
     MicPortNumber = 0;
+    HostSupportsCursorState = false;
     encryptedRtspEnabled = serverInfo->rtspSessionUrl && strstr(serverInfo->rtspSessionUrl, "rtspenc://");
     encryptionCtx = PltCreateCryptoContext();
     decryptionCtx = PltCreateCryptoContext();
@@ -1158,6 +1159,7 @@ int performRtspHandshake(PSERVER_INFORMATION serverInfo) {
         EncryptionFeaturesEnabled = 0;
 
         hostSupportsMic = strstr(response.payload, MIC_SDP_ATTRIBUTE) != NULL;
+        HostSupportsCursorState = strstr(response.payload, CURSOR_STATE_SDP_ATTRIBUTE) != NULL;
         if (StreamConfig.enableMic && !hostSupportsMic) {
             Limelog("Host does not advertise negotiated microphone support; continuing without microphone passthrough\n");
         }

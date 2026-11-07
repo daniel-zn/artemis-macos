@@ -30,6 +30,7 @@ uint16_t ControlPortNumber;
 uint16_t AudioPortNumber;
 uint16_t VideoPortNumber;
 uint16_t MicPortNumber;
+bool HostSupportsCursorState;
 SS_PING AudioPingPayload;
 SS_PING VideoPingPayload;
 uint32_t ControlConnectData;

@@ -42,6 +42,7 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 
         // Stop handling future input
         setCaptureActive(!isCaptureActive());
+        m_AutoMouse.userChangedCapture();
 
         // Force raise all keys to ensure they aren't stuck,
         // since we won't get their key up events.
@@ -74,8 +75,9 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         // Uncapture input
         setCaptureActive(false);
 
-        // Toggle mouse mode
+        // Toggle mouse mode. The user's choice holds over the automatic mode.
         m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
+        m_AutoMouse.userToggledMode();
 
         // Recapture input
         setCaptureActive(true);

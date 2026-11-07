@@ -4,6 +4,7 @@
 #include "backend/computermanager.h"
 
 #include "SDL_compat.h"
+#include "automousemode.h"
 
 struct GamepadState {
     SDL_GameController* controller;
@@ -140,6 +141,9 @@ public:
 
     void notifyFocusGained();
 
+    // The host (Apollo) reported whether a game has captured its cursor
+    void notifyHostCursorCaptured(bool captured);
+
     bool isCaptureActive();
 
     bool isSystemKeyCaptureActive();
@@ -240,6 +244,7 @@ private:
     int m_StreamWidth;
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
+    AutoMouseMode m_AutoMouse;
     bool m_AbsoluteTouchMode;
     bool m_DisabledTouchFeedback;
 
