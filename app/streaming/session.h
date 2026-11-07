@@ -175,6 +175,9 @@ private:
 
     void toggleFullscreen();
 
+    // The display mode keeps the mouse in Artemis (Fullscreen) rather than letting it leave
+    bool isMouseHeld(bool fullScreen);
+
     void notifyMouseEmulationMode(bool enabled);
 
     void updateOptimalWindowDisplayMode();

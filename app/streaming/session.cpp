@@ -753,7 +753,8 @@ bool Session::initialize(QQuickWindow* qtWindow)
     // Only the first 4 bytes are populated in the RI key IV
     RAND_bytes(reinterpret_cast<unsigned char*>(m_StreamConfig.remoteInputAesIv), 4);
     m_StreamConfig.enableMic = m_Preferences->enableMicrophone;
-    m_StreamConfig.enableCursorState = m_Preferences->autoMouseMode;
+    // Apollo tells us when a game captures the cursor (see AutoMouseMode)
+    m_StreamConfig.enableCursorState = true;
 
     switch (m_Preferences->audioConfig)
     {
@@ -1025,10 +1026,6 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     if (!m_Computer->isSupportedServerVersion) {
         emit displayLaunchError(tr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(m_Computer->name));
         return false;
-    }
-
-    if (m_Preferences->absoluteMouseMode && !m_App.isAppCollectorGame) {
-        emitLaunchWarning(tr("Your selection to enable remote desktop mouse mode may cause problems in games."));
     }
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
@@ -1554,6 +1551,15 @@ void Session::updateOptimalWindowDisplayMode()
     SDL_SetWindowDisplayMode(m_Window, &bestMode);
 }
 
+bool Session::isMouseHeld(bool fullScreen)
+{
+    // Only Fullscreen keeps the mouse in Artemis; Windowed and Borderless windowed let it
+    // leave (and hold it while a game captures it, see AutoMouseMode). Without a desktop
+    // there's nowhere for it to go.
+    return fullScreen && (m_Preferences->windowMode == StreamingPreferences::WM_FULLSCREEN ||
+                          !WMUtils::isRunningDesktopEnvironment());
+}
+
 void Session::toggleFullscreen()
 {
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
@@ -1593,6 +1599,10 @@ void Session::toggleFullscreen()
 
     // Input handler might need stop/stop mouse grab after changing modes
     m_InputHandler->updatePointerRegionLock();
+
+    // The mouse follows the new window mode (also checked on window events, as macOS may
+    // finish the transition later)
+    m_InputHandler->notifyWindowModeChanged(isMouseHeld(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN));
 }
 
 void Session::notifyMouseEmulationMode(bool enabled)
@@ -1823,7 +1833,8 @@ void Session::startConnection()
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
-    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
+    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height,
+                                         isMouseHeld(m_IsFullScreen));
 
     // Kick off the async connection thread then return to the caller to pump the event loop
     auto thread = new AsyncConnectionStartThread(this);
@@ -2038,11 +2049,10 @@ void Session::exec()
     bool needsFirstEnterCapture = false;
     bool needsPostDecoderCreationCapture = false;
 
-    // Avoid capturing the mouse initially for windowed relative mode.
-    // We still capture in windowed absolute mode because it doesn't
-    // constrain the motion of the cursor. This allows the user to
-    // easily reposition or resize the window.
-    if (m_IsFullScreen || m_Preferences->absoluteMouseMode) {
+    // Capture the mouse initially. Fullscreen holds it; the windowed modes start in absolute
+    // mode, which doesn't constrain the motion of the cursor, so the user can still
+    // reposition or resize the window.
+    {
         // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
         // event where it seems to work consistently on GNOME. For other platforms,
         // especially where SDL may call SDL_RecreateWindow(), we must only capture
@@ -2201,6 +2211,9 @@ void Session::exec()
             break;
 
         case SDL_WINDOWEVENT:
+            // The mouse follows the window mode, however fullscreen was entered or left
+            m_InputHandler->notifyWindowModeChanged(isMouseHeld(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN));
+
             // Early handling of some events
             switch (event.window.event) {
             case SDL_WINDOWEVENT_FOCUS_LOST:

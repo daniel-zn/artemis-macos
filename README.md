@@ -67,6 +67,14 @@ What it adds on top of upstream Moonlight:
     If the microphone isn't allowed, Settings > Audio & Microphone shows one line saying so, with an
     **Open Privacy Settings** link, and sessions go on without the microphone. The **Test microphone** meter shows
     whether the input hears anything.
+- **The Display mode decides where the mouse can go** (all platforms). **Fullscreen** keeps the mouse inside the
+  stream. **Windowed** and **Borderless windowed** let it move freely in and out of the window, and hold it in the
+  window only while a game on an Apollo host has captured the cursor (Apollo reports it, see `docs/cursor_state.md`
+  in danielzn-Apollo), releasing it when the game lets go. With a host that doesn't report the cursor (Sunshine,
+  GeForce Experience) the windowed modes stay free. Switching in or out of fullscreen mid-stream (Ctrl+Alt+Shift+X)
+  follows the new mode. Ctrl+Alt+Shift+M still switches the mouse mode by hand (until the stream ends or the window
+  mode changes) and Ctrl+Alt+Shift+Z releases the mouse. Upstream's "Optimize mouse for remote desktop instead of
+  games" checkbox (and the command line's `--absolute-mouse`) is gone; its saved value is dropped.
 - **Native macOS look** (macOS only; Windows and Linux keep upstream's Material look, apart from tooltips now
   wrapping at 400 px as upstream intended):
   - A native toolbar with SF Symbols in the title bar, drawn on Liquid Glass on macOS 26 and later.

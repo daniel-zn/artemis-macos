@@ -1,15 +1,24 @@
 #include "automousemode.h"
 
-AutoMouseMode::AutoMouseMode(bool enabled)
-    : m_Enabled(enabled),
+AutoMouseMode::AutoMouseMode(bool held)
+    : m_Held(held),
       m_Overridden(false),
-      m_ReleasedByAuto(false)
+      m_ReleasedByAuto(false),
+      m_HostCaptured(false)
 {
+}
+
+bool AutoMouseMode::initialAbsolute() const
+{
+    return !m_Held;
 }
 
 AutoMouseMode::Step AutoMouseMode::hostCursorChanged(bool captured, bool absolute, bool captureActive, bool pointerInStream)
 {
     Step step;
+
+    // Remembered for a later switch out of fullscreen
+    m_HostCaptured = captured;
 
     if (!active() || absolute == !captured) {
         return step;
@@ -41,6 +50,30 @@ AutoMouseMode::Step AutoMouseMode::hostCursorChanged(bool captured, bool absolut
     return step;
 }
 
+AutoMouseMode::Step AutoMouseMode::windowModeChanged(bool held, bool absolute, bool captureActive)
+{
+    Step step;
+
+    if (held == m_Held) {
+        // Same mouse behaviour (e.g. Borderless windowed <-> Windowed): nothing changes
+        return step;
+    }
+
+    m_Held = held;
+    m_Overridden = false;
+    m_ReleasedByAuto = false;
+
+    bool wantAbsolute = !held && !m_HostCaptured;
+    if (absolute == wantAbsolute) {
+        return step;
+    }
+
+    step.changeMode = true;
+    step.absolute = wantAbsolute;
+    step.capture = captureActive ? Capture::Capture : Capture::Keep;
+    return step;
+}
+
 void AutoMouseMode::userToggledMode()
 {
     m_Overridden = true;
@@ -54,5 +87,5 @@ void AutoMouseMode::userChangedCapture()
 
 bool AutoMouseMode::active() const
 {
-    return m_Enabled && !m_Overridden;
+    return !m_Held && !m_Overridden;
 }

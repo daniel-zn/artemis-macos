@@ -358,7 +358,23 @@ void SdlInputHandler::notifyHostCursorCaptured(bool captured)
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Automatic mouse mode: %s", step.absolute ? "absolute" : "relative");
+    applyMouseModeStep(step);
+}
 
+void SdlInputHandler::notifyWindowModeChanged(bool mouseHeld)
+{
+    AutoMouseMode::Step step = m_AutoMouse.windowModeChanged(mouseHeld, m_AbsoluteMouseMode, isCaptureActive());
+    if (!step.changeMode) {
+        return;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Window mode changed, mouse mode: %s", step.absolute ? "absolute" : "relative");
+    applyMouseModeStep(step);
+}
+
+void SdlInputHandler::applyMouseModeStep(const AutoMouseMode::Step& step)
+{
     switch (step.capture) {
     case AutoMouseMode::Capture::Capture:
         setCaptureActive(false);

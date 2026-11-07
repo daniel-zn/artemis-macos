@@ -85,7 +85,7 @@ struct DualSenseOutputReport{
 class SdlInputHandler
 {
 public:
-    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight);
+    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, bool mouseHeld);
 
     ~SdlInputHandler();
 
@@ -144,6 +144,9 @@ public:
     // The host (Apollo) reported whether a game has captured its cursor
     void notifyHostCursorCaptured(bool captured);
 
+    // The window entered or left fullscreen; mouseHeld: the new mode keeps the mouse in Artemis
+    void notifyWindowModeChanged(bool mouseHeld);
+
     bool isCaptureActive();
 
     bool isSystemKeyCaptureActive();
@@ -160,6 +163,8 @@ public:
     QString getUnmappedGamepads();
 
 private:
+    void applyMouseModeStep(const AutoMouseMode::Step& step);
+
     enum KeyCombo {
         KeyComboQuit,
         KeyComboUngrabInput,
@@ -243,8 +248,8 @@ private:
     SDL_TimerID m_LongPressTimer;
     int m_StreamWidth;
     int m_StreamHeight;
-    bool m_AbsoluteMouseMode;
     AutoMouseMode m_AutoMouse;
+    bool m_AbsoluteMouseMode;
     bool m_AbsoluteTouchMode;
     bool m_DisabledTouchFeedback;
 

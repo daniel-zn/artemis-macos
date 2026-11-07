@@ -1060,9 +1060,10 @@ Flickable {
                     }
 
                     ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
+                    ToolTip.timeout: 10000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
+                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.") + "\n\n" +
+                                  qsTr("Fullscreen keeps the mouse inside the stream; in the windowed modes it moves freely in and out, and stays in the window only while a game uses it (Apollo hosts).")
                 }
 
                 Row {
@@ -1770,43 +1771,6 @@ Flickable {
             Column {
                 anchors.fill: parent
                 spacing: 5
-
-                CheckBox {
-                    id: absoluteMouseCheck
-                    hoverEnabled: true
-                    width: parent.width
-                    text: qsTr("Optimize mouse for remote desktop instead of games")
-                    font.pointSize: settingsPage.bodyPointSize
-                    checked: StreamingPreferences.absoluteMouseMode
-                    onCheckedChanged: {
-                        StreamingPreferences.absoluteMouseMode = checked
-                    }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 10000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("This enables seamless mouse control without capturing the client's mouse cursor. It is ideal for remote desktop usage but will not work in most games.") + " " +
-                                  qsTr("You can toggle this while streaming using Ctrl+Alt+Shift+M.") + "\n\n" +
-                                  qsTr("NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.")
-                }
-
-                CheckBox {
-                    id: autoMouseCheck
-                    hoverEnabled: true
-                    width: parent.width
-                    text: qsTr("Switch mouse mode automatically for games")
-                    font.pointSize: settingsPage.bodyPointSize
-                    checked: StreamingPreferences.autoMouseMode
-                    onCheckedChanged: {
-                        StreamingPreferences.autoMouseMode = checked
-                    }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 10000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("With an Apollo host, the mouse stays in the stream while a game uses it to look around, and can leave the window the rest of the time.") + " " +
-                                  qsTr("Ctrl+Alt+Shift+M switches back to manual for the rest of the stream.")
-                }
 
                 Row {
                     spacing: 5

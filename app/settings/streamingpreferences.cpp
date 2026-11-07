@@ -40,8 +40,8 @@
 #define SER_WINDOWMODE "windowmode"
 #define SER_MDNS "mdns"
 #define SER_QUITAPPAFTER "quitAppAfter"
-#define SER_ABSMOUSEMODE "mouseacceleration"
-#define SER_AUTOMOUSEMODE "automousemode"
+#define SER_ABSMOUSEMODE "mouseacceleration"  // removed, only for migration
+#define SER_AUTOMOUSEMODE "automousemode"  // removed, only for migration
 #define SER_ABSTOUCHMODE "abstouchmode"
 #define SER_STARTWINDOWED "startwindowed"
 #define SER_FRAMEPACING "framepacing"
@@ -119,9 +119,6 @@ namespace {
             { "Mute audio stream when Moonlight is not the active window", "Mute the session when Moonlight isn't the active window" },
             { "Mutes Moonlight's audio when you Alt+Tab out of the stream or click on a different window.",
               "Mutes the session's audio when you switch to another app or window." },
-            { "Optimize mouse for remote desktop instead of games", "Optimize mouse for remote desktop" },
-            { "This enables seamless mouse control without capturing the client's mouse cursor. It is ideal for remote desktop usage but will not work in most games.",
-              "Moves the pointer in and out of the session without capturing it. Best for desktop work; apps that need a captured mouse, like games, won't work with it." },
             { "Only enable this option when streaming a game that doesn't support gamepads being connected after startup.",
               "Only turn this on for an app that doesn't notice gamepads connected after it starts." },
             { "Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.",
@@ -322,8 +319,9 @@ void StreamingPreferences::reload()
     multiController = settings.value(SER_MULTICONT, true).toBool();
     enableMdns = settings.value(SER_MDNS, true).toBool();
     quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
-    absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, false).toBool();
-    autoMouseMode = settings.value(SER_AUTOMOUSEMODE, true).toBool();
+    // The mouse mode now follows the Display mode; drop the old checkboxes' values
+    settings.remove(SER_ABSMOUSEMODE);
+    settings.remove(SER_AUTOMOUSEMODE);
     absoluteTouchMode = settings.value(SER_ABSTOUCHMODE, true).toBool();
     framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     connectionWarnings = settings.value(SER_CONNWARNINGS, true).toBool();
@@ -543,8 +541,6 @@ void StreamingPreferences::save()
     settings.setValue(SER_MULTICONT, multiController);
     settings.setValue(SER_MDNS, enableMdns);
     settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
-    settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);
-    settings.setValue(SER_AUTOMOUSEMODE, autoMouseMode);
     settings.setValue(SER_ABSTOUCHMODE, absoluteTouchMode);
     settings.setValue(SER_FRAMEPACING, framePacing);
     settings.setValue(SER_CONNWARNINGS, connectionWarnings);
