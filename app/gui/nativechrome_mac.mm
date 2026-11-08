@@ -6,6 +6,7 @@
 #include <QGuiApplication>
 #include <QQmlEngine>
 #include <QQuickImageProvider>
+#include <QPointer>
 #include <QQuickWindow>
 
 #import <AppKit/AppKit.h>
@@ -464,9 +465,13 @@ void NativeChrome::setWindowGeometry(QQuickWindow* window, qreal x, qreal y, qre
         return;
     }
 
+    QRect current = window->geometry();
+    if (current == QRect(qRound(x), qRound(y), qRound(width), qRound(height))) {
+        return;
+    }
+
     // Apply the change in the content area to the whole frame (title bar and toolbar
     // included), converting Qt's top-left origin to Cocoa's bottom-left one
-    QRect current = window->geometry();
     NSRect frame = nsWindow.frame;
     CGFloat top = NSMaxY(frame) - (y - current.y());
     frame.origin.x += x - current.x();
@@ -483,6 +488,63 @@ static NSWindow* nativeWindow(QQuickWindow* window)
         return nil;
     }
     return reinterpret_cast<NSView*>(window->winId()).window;
+}
+
+static bool hasFullSizeContentView(NSWindow* nsWindow)
+{
+    return (nsWindow.styleMask & NSWindowStyleMaskFullSizeContentView) != 0;
+}
+
+// AppKit sometimes holds a style mask change back (seen right after launch) and applies it
+// a little later: put the frame back once it has, unless the window has been switched back
+static void restoreFrameOnceApplied(QPointer<QQuickWindow> window, NSWindow* nsWindow, bool under, NSRect frame, int triesLeft)
+{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 50 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+        if (!window || nativeWindow(window) != nsWindow || ((window->flags() & Qt::ExpandedClientAreaHint) != 0) != under) {
+            return;
+        }
+        if (hasFullSizeContentView(nsWindow) != under) {
+            if (triesLeft > 0) {
+                restoreFrameOnceApplied(window, nsWindow, under, frame, triesLeft - 1);
+            }
+            return;
+        }
+        if (!(nsWindow.styleMask & NSWindowStyleMaskFullScreen) && !NSEqualRects(nsWindow.frame, frame)) {
+            [nsWindow setFrame:frame display:YES];
+        }
+    });
+}
+
+void NativeChrome::setContentUnderTitleBar(QQuickWindow* window, bool under)
+{
+    NSWindow* nsWindow = nativeWindow(window);
+    if (nsWindow == nil) {
+        return;
+    }
+
+    // NoTitleBarBackgroundHint stays: attach() made the title bar transparent anyway
+    Qt::WindowFlags flags = window->flags();
+    Qt::WindowFlags wanted = under ? flags | Qt::ExpandedClientAreaHint | Qt::NoTitleBarBackgroundHint
+                                   : flags & ~Qt::WindowFlags(Qt::ExpandedClientAreaHint);
+    if (wanted == flags) {
+        return;
+    }
+    // Qt keeps the content's rectangle, which would grow or shrink the window by its title
+    // bar: keep the frame instead, so only the content moves under (or out from) the title bar
+    NSRect frame = nsWindow.frame;
+    window->setFlags(wanted);
+    bool fullScreen = nsWindow.styleMask & NSWindowStyleMaskFullScreen;
+    if (hasFullSizeContentView(nsWindow) != under && !fullScreen) {
+        // AppKit held the change back: it applies it once the frame next changes, so change
+        // the frame by a point (and back), and put the frame back when it has
+        NSRect nudged = frame;
+        nudged.size.height -= 1;
+        [nsWindow setFrame:nudged display:NO];
+        restoreFrameOnceApplied(QPointer<QQuickWindow>(window), nsWindow, under, frame, 40);
+    }
+    if (!fullScreen && !NSEqualRects(nsWindow.frame, frame)) {
+        [nsWindow setFrame:frame display:YES];
+    }
 }
 
 void NativeChrome::setRememberWindowFrame(QQuickWindow* window, bool remember)
@@ -538,6 +600,70 @@ QStringList NativeChrome::appMenuItems() const
         items.append(QString::fromNSString(item.title) + (enabled ? "|enabled" : "|disabled"));
     }
     return items;
+}
+
+// The on-screen control for one of the toolbar's buttons (AppKit makes its own view for it)
+static NSView* findControl(NSView* view, SEL action)
+{
+    if ([view isKindOfClass:NSControl.class] && !view.isHiddenOrHasHiddenAncestor) {
+        NSControl* control = (NSControl*)view;
+        // The button sends the item's action, or asks the item to send it
+        if (control.action == action || ([control.target isKindOfClass:NSToolbarItem.class] &&
+                                         ((NSToolbarItem*)control.target).action == action)) {
+            return view;
+        }
+    }
+    for (NSView* subview in view.subviews) {
+        if (NSView* found = findControl(subview, action)) {
+            return found;
+        }
+    }
+    return nil;
+}
+
+QVariantMap NativeChrome::chromeFrames(QQuickWindow* window) const
+{
+    QVariantMap frames;
+    NSWindow* nsWindow = nativeWindow(window);
+    if (nsWindow == nil) {
+        return frames;
+    }
+
+    // In the Qt view's coordinates (top-left origin, points), like QML's window coordinates
+    NSView* qtView = reinterpret_cast<NSView*>(window->winId());
+    auto add = [&](const char* name, NSView* view) {
+        if (view == nil || view.window == nil) {
+            return;
+        }
+        // The toolbar can live in its own window in full screen: go through the screen
+        NSRect onScreen = [view.window convertRectToScreen:[view convertRect:view.bounds toView:nil]];
+        NSRect inQtView = [qtView convertRect:[nsWindow convertRectFromScreen:onScreen] fromView:nil];
+        CGFloat top = qtView.isFlipped ? NSMinY(inQtView) : NSHeight(qtView.bounds) - NSMaxY(inQtView);
+        frames.insert(name, QVariantMap { { "x", NSMinX(inQtView) }, { "y", top },
+                                          { "width", NSWidth(inQtView) }, { "height", NSHeight(inQtView) } });
+    };
+    NSView* frameView = nsWindow.contentView.superview;
+    NSView* back = findControl(frameView, @selector(back:));
+    if (back == nil) {
+        // The toolbar's own window in full screen
+        for (NSWindow* other in NSApp.windows) {
+            if (other != nsWindow && other.contentView.superview != nil &&
+                (back = findControl(other.contentView.superview, @selector(back:))) != nil) {
+                break;
+            }
+        }
+    }
+    add("back", back);
+    if (!(nsWindow.styleMask & NSWindowStyleMaskFullScreen)) {
+        add("close", [nsWindow standardWindowButton:NSWindowCloseButton]);
+        add("zoom", [nsWindow standardWindowButton:NSWindowZoomButton]);
+    }
+    NSRect content = [qtView convertRect:qtView.bounds toView:nil];
+    frames.insert("contentTop", NSHeight(frameView.bounds) - NSMaxY(content));
+    frames.insert("fullScreen", (bool)(nsWindow.styleMask & NSWindowStyleMaskFullScreen));
+    // Cocoa's screen coordinates start at the bottom of the main display, Qt's at its top
+    frames.insert("frameTop", NSMaxY(NSScreen.screens.firstObject.frame) - NSMaxY(nsWindow.frame));
+    return frames;
 }
 
 QString NativeChrome::symbol(const QString& name, const QColor& color) const

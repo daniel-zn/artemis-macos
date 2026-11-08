@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <QVariantMap>
 
 class QQuickWindow;
 class QQmlEngine;
@@ -54,6 +55,10 @@ public:
     // animate like a native window; the call returns when the animation has finished.
     Q_INVOKABLE void setWindowGeometry(QQuickWindow* window, qreal x, qreal y, qreal width, qreal height, bool animate);
 
+    // Lets the window's content run under the title bar and toolbar (Qt's expanded client
+    // area: AppKit's full-size content view), keeping the window's frame where it is
+    Q_INVOKABLE void setContentUnderTitleBar(QQuickWindow* window, bool under);
+
     // Remembers the window's size and position between launches (macOS autosave; it's on
     // from attach()). Settings turns it off while it has the window enlarged; turning it
     // back on saves the window's current frame.
@@ -64,6 +69,13 @@ public:
 
     // The application menu's items as "title|enabled" strings, for UI self-tests
     Q_INVOKABLE QStringList appMenuItems() const;
+
+    // Where the window's chrome is, for UI self-tests: "back" (the toolbar's back button),
+    // "close" and "zoom" (traffic lights, absent in full screen) as {x, y, width, height}
+    // in the window's QML coordinates, "contentTop", the y where the window's content
+    // view starts (0 when it runs under the title bar), and "frameTop", the window frame's
+    // top on the screen (in Qt's screen coordinates)
+    Q_INVOKABLE QVariantMap chromeFrames(QQuickWindow* window) const;
 
     // Image URL for an SF Symbol drawn in the given color, for Image.source
     Q_INVOKABLE QString symbol(const QString& name, const QColor& color) const;

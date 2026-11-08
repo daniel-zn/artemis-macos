@@ -50,6 +50,15 @@ QStringList NativeChrome::appMenuItems() const
     return QStringList();
 }
 
+void NativeChrome::setContentUnderTitleBar(QQuickWindow*, bool)
+{
+}
+
+QVariantMap NativeChrome::chromeFrames(QQuickWindow*) const
+{
+    return QVariantMap();
+}
+
 QString NativeChrome::symbol(const QString&, const QColor&) const
 {
     return QString();

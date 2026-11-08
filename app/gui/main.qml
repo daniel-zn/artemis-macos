@@ -33,10 +33,13 @@ ApplicationWindow {
     // handed alive when they're popped.
     property Item macSettingsPage: null
     property var macSettingsIncubator: null
+    // Kept while the page is being made: if the garbage collector took the component,
+    // the half-made page would be destroyed in the middle of its own onCompleted (Qt Fatal)
+    property var macSettingsComponent: null
 
     function macPrepareSettings() {
-        var component = Qt.createComponent("qrc:/gui/SettingsView.qml")
-        macSettingsIncubator = component.incubateObject(stackView, { "visible": false })
+        macSettingsComponent = Qt.createComponent("qrc:/gui/SettingsView.qml")
+        macSettingsIncubator = macSettingsComponent.incubateObject(stackView, { "visible": false })
     }
 
     // The prepared page; if the background work hasn't finished yet (it runs in the
@@ -50,6 +53,7 @@ ApplicationWindow {
                 macSettingsPage = macSettingsIncubator.object
             }
             macSettingsIncubator = null
+            macSettingsComponent = null
         }
         return macSettingsPage
     }

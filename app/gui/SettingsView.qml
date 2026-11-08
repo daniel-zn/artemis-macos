@@ -31,6 +31,14 @@ Flickable {
     property bool twoColumns: !NativeChrome.enabled
     readonly property real sidebarWidth: NativeChrome.enabled ? 236 : 0
 
+    // macOS: like System Settings, the sidebar runs the window's full height, with the
+    // traffic lights and the toolbar's back button on its top, and the section pane starts
+    // below the toolbar. While Settings shows, the window's content runs under the title bar
+    // (Qt's expanded client area: AppKit's full-size content view). ApplicationWindow keeps
+    // its content item, and so this page, in the safe area below the title bar and toolbar
+    // (no traffic lights in full screen, but the toolbar stays); the sidebar reaches up by that.
+    readonly property real macTitleBarHeight: NativeChrome.enabled ? window.contentItem.y : 0
+
     // Type sizes: the macOS body and secondary sizes there, upstream's elsewhere
     readonly property real bodyPointSize: NativeChrome.enabled ? 13 : 12
     readonly property real captionPointSize: NativeChrome.enabled ? 11 : 9
@@ -121,17 +129,19 @@ Flickable {
                 groups[i].title = ""
                 groups[i].padding = 16
             }
-            macSidebarLoader.parent = settingsPage
         }
     }
 
-    // macOS: the list of sections. It sits on the Flickable itself, not its
-    // content, so it stays put while the section scrolls.
+    // macOS: the list of sections. It sits next to the page (in the StackView), not in
+    // its content, so it stays put while the section scrolls and runs up under the title bar.
     Loader {
         id: macSidebarLoader
         active: NativeChrome.enabled
+        objectName: "macSettingsSidebar"
+        visible: settingsPage.visible
+        y: -settingsPage.macTitleBarHeight
         width: settingsPage.sidebarWidth
-        height: settingsPage.height
+        height: parent ? parent.height + settingsPage.macTitleBarHeight : 0
         z: 1
 
         sourceComponent: Item {
@@ -151,6 +161,7 @@ Flickable {
                 id: macSectionList
                 anchors.fill: parent
                 anchors.margins: 10
+                anchors.topMargin: 10 + settingsPage.macTitleBarHeight
                 spacing: 2
                 interactive: false
                 model: macSectionModel
@@ -269,7 +280,14 @@ Flickable {
     }
 
     StackView.onActivated: {
+        // Grow first, then let the content run under the title bar (leaving, the other way
+        // round), so the window's sizes are always measured the same way
         macEnlargeWindow()
+        NativeChrome.setContentUnderTitleBar(window, true)
+        if (NativeChrome.enabled) {
+            // Next to the page in the StackView (a Flickable would take it into its content)
+            macSidebarLoader.parent = settingsPage.parent
+        }
 
         // This enables Tab and BackTab based navigation rather than arrow keys.
         // It is required to shift focus between controls on the settings page.
@@ -282,6 +300,7 @@ Flickable {
     }
 
     StackView.onDeactivating: {
+        NativeChrome.setContentUnderTitleBar(window, false)
         macRestoreWindow()
         SdlGamepadKeyNavigation.setUiNavMode(false)
         StreamingPreferences.setMicrophoneMonitorActive(false)
