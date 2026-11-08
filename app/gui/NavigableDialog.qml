@@ -3,6 +3,8 @@ import QtQuick.Controls 2.5
 
 import NativeChrome 1.0
 
+import "MacSpacing.js" as MacSpacing
+
 Dialog {
     id: dialog
     modal: true
@@ -12,8 +14,7 @@ Dialog {
     Component.onCompleted: {
         if (NativeChrome.enabled) {
             Overlay.modal = macModalDim
-            padding = 20
-            topPadding = 18
+            padding = MacSpacing.dialogPadding
             var oldBackground = background
             background = macBackgroundComponent.createObject(dialog)
             if (oldBackground) {
@@ -38,6 +39,11 @@ Dialog {
             objectName: "macButtonBox"
             visible: count > 0
             alignment: Qt.AlignRight
+            // Buttons inset like the dialog's text, with the same space under them
+            leftPadding: MacSpacing.dialogPadding
+            rightPadding: MacSpacing.dialogPadding
+            bottomPadding: MacSpacing.dialogPadding
+            topPadding: 0
             // The style's own is a square panel that pokes out of the rounded dialog
             background: Item { implicitHeight: 32 }
             delegate: Button {

@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import "MacSpacing.js" as MacSpacing
+
 // One game in the macOS game list: a small rounded box art thumbnail, the name,
 // and a "Running" badge. The row's buttons and behavior live in AppView.
 // Only loaded on macOS (Qt 6).
@@ -22,7 +24,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 10
+        radius: MacSpacing.rowRadius
         color: row.selected ? palette.highlight
              : row.hovered ? Qt.rgba(palette.text.r, palette.text.g, palette.text.b, 0.08)
              : "transparent"
@@ -32,7 +34,7 @@ Item {
     MacBoxArt {
         id: thumbnail
         anchors.left: parent.left
-        anchors.leftMargin: 10
+        anchors.leftMargin: MacSpacing.rowInset
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height - 12
         width: height * 0.75
@@ -44,7 +46,7 @@ Item {
         anchors.left: thumbnail.right
         anchors.leftMargin: 12
         anchors.right: parent.right
-        anchors.rightMargin: 12 + row.trailingSpace
+        anchors.rightMargin: MacSpacing.rowInset + row.trailingSpace
         anchors.verticalCenter: parent.verticalCenter
         spacing: 3
 

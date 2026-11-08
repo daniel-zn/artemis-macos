@@ -4,6 +4,8 @@ import QtQuick.Layouts 1.2
 
 import NativeChrome 1.0
 
+import "MacSpacing.js" as MacSpacing
+
 NavigableDialog {
     id: dialog
 
@@ -110,6 +112,11 @@ NavigableDialog {
         Component.onCompleted: {
             if (NativeChrome.enabled) {
                 alignment = Qt.AlignRight
+                // Buttons inset like the dialog's text, with the same space under them
+                leftPadding = MacSpacing.dialogPadding
+                rightPadding = MacSpacing.dialogPadding
+                bottomPadding = MacSpacing.dialogPadding
+                topPadding = 0
                 // The style's own is a square panel that pokes out of the rounded dialog
                 if (background) {
                     background.visible = false

@@ -11,16 +11,19 @@ import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 import NativeChrome 1.0
 
+import "MacSpacing.js" as MacSpacing
+
 CenteredGridView {
     property ComputerModel computerModel : createModel()
 
     id: pcGrid
     focus: true
     activeFocusOnTab: true
-    topMargin: NativeChrome.enabled ? 10 : 20
-    bottomMargin: 5
-    // macOS shows a list: one full-width row per PC
-    cellWidth: NativeChrome.enabled ? Math.min(width - 20, 640) : 310
+    topMargin: NativeChrome.enabled ? MacSpacing.top : 20
+    bottomMargin: NativeChrome.enabled ? MacSpacing.bottom : 5
+    // macOS shows a list: one row per PC, inset from the edges (MacSpacing)
+    macList: NativeChrome.enabled
+    cellWidth: NativeChrome.enabled ? width : 310
     cellHeight: NativeChrome.enabled ? 54 : 330
     objectName: qsTr("Computers")
 
@@ -157,7 +160,7 @@ CenteredGridView {
 
     delegate: NavigableItemDelegate {
         id: pcTile
-        width: NativeChrome.enabled ? pcGrid.cellWidth : 300
+        width: NativeChrome.enabled ? MacSpacing.rowWidth(pcGrid.width) : 300
         height: NativeChrome.enabled ? 50 : 320
         grid: pcGrid
 
@@ -288,7 +291,7 @@ CenteredGridView {
         Component {
             id: macRowBackgroundComponent
             Rectangle {
-                radius: 10
+                radius: MacSpacing.rowRadius
                 color: pcTile.highlighted ? pcTile.palette.highlight
                      : pcTile.down ? Qt.rgba(pcTile.palette.text.r, pcTile.palette.text.g, pcTile.palette.text.b, 0.14)
                      : pcTile.hovered ? Qt.rgba(pcTile.palette.text.r, pcTile.palette.text.g, pcTile.palette.text.b, 0.08)
@@ -309,7 +312,7 @@ CenteredGridView {
             Image {
                 id: macPcIcon
                 anchors.left: parent.left
-                anchors.leftMargin: 12
+                anchors.leftMargin: MacSpacing.rowInset
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30; height: 30
                 sourceSize { width: 30; height: 30 }
@@ -358,7 +361,7 @@ CenteredGridView {
             Image {
                 id: macStatusIcon
                 anchors.right: parent.right
-                anchors.rightMargin: 12
+                anchors.rightMargin: MacSpacing.rowInset
                 anchors.verticalCenter: parent.verticalCenter
                 width: 18; height: 18
                 sourceSize { width: 18; height: 18 }

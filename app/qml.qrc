@@ -5,6 +5,7 @@
         <file>gui/AppView.qml</file>
         <file>gui/MacBoxArt.qml</file>
         <file>gui/MacAppRow.qml</file>
+        <file>gui/MacSpacing.js</file>
         <file>gui/MacMenuBar.qml</file>
         <file>gui/ActivitySpinner.qml</file>
         <file>gui/SettingsView.qml</file>

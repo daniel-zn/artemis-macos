@@ -9,6 +9,8 @@ import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import NativeChrome 1.0
 
+import "MacSpacing.js" as MacSpacing
+
 CenteredGridView {
     property int computerIndex
     property AppModel appModel : createModel()
@@ -19,10 +21,11 @@ CenteredGridView {
     id: appGrid
     focus: true
     activeFocusOnTab: true
-    topMargin: NativeChrome.enabled ? 10 : 20
-    bottomMargin: 5
-    // macOS shows a list: one full-width row per game
-    cellWidth: NativeChrome.enabled ? Math.min(width - 20, 640) : 230
+    topMargin: NativeChrome.enabled ? MacSpacing.top : 20
+    bottomMargin: NativeChrome.enabled ? MacSpacing.bottom : 5
+    // macOS shows a list: one row per game, inset from the edges (MacSpacing)
+    macList: NativeChrome.enabled
+    cellWidth: NativeChrome.enabled ? width : 230
     cellHeight: NativeChrome.enabled ? 64 : 297
 
     function computerLost()
@@ -77,7 +80,7 @@ CenteredGridView {
 
     delegate: NavigableItemDelegate {
         id: appTile
-        width: NativeChrome.enabled ? appGrid.cellWidth : 220
+        width: NativeChrome.enabled ? MacSpacing.rowWidth(appGrid.width) : 220
         height: NativeChrome.enabled ? 60 : 287
         grid: appGrid
 
@@ -158,7 +161,7 @@ CenteredGridView {
             id: macRunningButtons
             visible: NativeChrome.enabled && model.running
             anchors.right: parent.right
-            anchors.rightMargin: 12
+            anchors.rightMargin: MacSpacing.rowInset
             anchors.verticalCenter: parent.verticalCenter
             spacing: 6
 
