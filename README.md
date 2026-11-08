@@ -13,11 +13,11 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 ## About this fork
 
 > [!NOTE]
-> This is a personal fork (`daniel-zn/danielzn-moonlight-qt`, default branch `main`) made to pair with
+> This is a personal fork (`daniel-zn/artemis-macos`, default branch `main`) made to pair with
 > [daniel-zn/danielzn-Apollo](https://github.com/daniel-zn/danielzn-Apollo). It doesn't follow upstream updates.
 
 **On macOS the app is named Artemis** (`Artemis.app`, `Artemis.dmg`). It pairs with the iPhone app Artemis
-([daniel-zn/danielzn-moonlight-ios](https://github.com/daniel-zn/danielzn-moonlight-ios)) and with Apollo hosts from
+([daniel-zn/artemis-ios](https://github.com/daniel-zn/artemis-ios)) and with Apollo hosts from
 [daniel-zn/danielzn-Apollo](https://github.com/daniel-zn/danielzn-Apollo). It isn't affiliated with or endorsed by
 the Moonlight project, or by the Artemis Android client. The Windows and Linux builds keep the name Moonlight.
 
