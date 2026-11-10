@@ -10,6 +10,7 @@
 #include <QQuickWindow>
 
 #import <AppKit/AppKit.h>
+#import <objc/message.h>
 #import <objc/runtime.h>
 
 // Built without ARC, so ownership below is manual.
@@ -450,6 +451,21 @@ void NativeChrome::attach(QQuickWindow* window)
     [backdrop release];
 }
 
+// macOS remembers the window's frame on each display the user moved it to, and when the
+// window is dragged onto one of them again it gets the size it had there back, unless it
+// has been resized since. AppKit doesn't count a resize by the app as one, so the window
+// that Settings had enlarged shrank back to the computer list's size as it was dropped on
+// a display the list had been on, away from the mouse. Count Artemis's own resizes
+// (Settings growing the window and putting it back) like the user's.
+static void countAsUserResize(NSWindow* nsWindow)
+{
+    // AppKit's own hook for a resize by the user (private: seen in macOS 27; without it, nothing happens)
+    SEL willResize = NSSelectorFromString(@"_windowLayoutWillResize");
+    if ([nsWindow respondsToSelector:willResize]) {
+        ((void (*)(id, SEL))objc_msgSend)(nsWindow, willResize);
+    }
+}
+
 void NativeChrome::setWindowGeometry(QQuickWindow* window, qreal x, qreal y, qreal width, qreal height, bool animate)
 {
     if (window == nullptr) {
@@ -458,6 +474,9 @@ void NativeChrome::setWindowGeometry(QQuickWindow* window, qreal x, qreal y, qre
 
     NSWindow* nsWindow = QGuiApplication::platformName() == QLatin1String("cocoa") ?
                              reinterpret_cast<NSView*>(window->winId()).window : nil;
+    if (nsWindow != nil) {
+        countAsUserResize(nsWindow);
+    }
     // AppKit only runs the animation on a live display: on a hidden window (screen locked,
     // display asleep) the call would block waiting for it, so just move it there
     if (nsWindow == nil || !animate || !(nsWindow.occlusionState & NSWindowOcclusionStateVisible)) {
