@@ -10,25 +10,23 @@ Dialog {
     modal: true
     anchors.centerIn: Overlay.overlay
 
-    // macOS: a rounded sheet-like panel over a dimmed window, as in system alerts
+    // macOS: a rounded sheet-like panel over a dimmed window, as in system alerts.
+    // The style's background and footer are replaced, not destroyed: the control hides the
+    // old ones, and they go with the dialog. Destroying them here broke the Settings page
+    // when it's built in the background (main.qml, at launch): a destroy runs at the next
+    // event-loop pass, and when that came before the page was finished, Qt dropped the
+    // half-made page ("Object or context destroyed during incubation") - with a handler of
+    // it still running, a Qt Fatal (seen 2026-11-09, SettingsView's resolution list).
     Component.onCompleted: {
         if (NativeChrome.enabled) {
             Overlay.modal = macModalDim
             padding = MacSpacing.dialogPadding
-            var oldBackground = background
             background = macBackgroundComponent.createObject(dialog)
-            if (oldBackground) {
-                oldBackground.destroy()
-            }
 
             // The fallback style's button box draws old-looking buttons on a square
             // panel. Dialogs that bring their own (NavigableMessageDialog) keep theirs.
             if (!footer || footer.objectName !== "macButtonBox") {
-                var oldFooter = footer
                 footer = macButtonBoxComponent.createObject(dialog)
-                if (oldFooter) {
-                    oldFooter.destroy()
-                }
             }
         }
     }

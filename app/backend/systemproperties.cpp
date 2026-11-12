@@ -12,6 +12,24 @@
 #include <Windows.h>
 #endif
 
+// On macOS SDL's video subsystem stays initialized from the first time we start it until the app
+// quits (main.cpp does the same on Windows). When its last reference goes, SDL3's Cocoa_VideoQuit
+// spins the run loop. SettingsView is created asynchronously at launch and its resolution list
+// calls refreshDisplays() while it builds, so that nested loop ran the QML incubator inside the
+// handler and Qt aborted ("Object destroyed while one of its QML signal handlers is in progress",
+// SettingsView.qml, 2026-11-09). Taken here, not before QGuiApplication exists: SDL would create
+// its own NSApplication. While initialized SDL follows display changes (its display
+// reconfiguration callback), so refreshDisplays() still sees displays plugged in later.
+static void holdVideoSubsystem()
+{
+#ifdef Q_OS_DARWIN
+    static bool held = false;
+    if (!held && SDL_InitSubSystem(SDL_INIT_VIDEO) == 0) {
+        held = true;
+    }
+#endif
+}
+
 class SystemPropertyQueryThread : public QThread
 {
 public:
@@ -192,6 +210,7 @@ void SystemProperties::startAsyncLoad()
                      SDL_GetError());
         return;
     }
+    holdVideoSubsystem();
 
     testWindow = StreamUtils::createTestWindow();
     if (!testWindow) {
@@ -228,6 +247,7 @@ void SystemProperties::refreshDisplays()
                      SDL_GetError());
         return;
     }
+    holdVideoSubsystem();
 
     monitorNativeResolutions.clear();
     monitorSafeAreaResolutions.clear();
