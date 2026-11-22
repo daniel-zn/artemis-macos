@@ -57,6 +57,9 @@
 #include "gui/uiprobe.h"
 #endif
 #include "backend/autoupdatechecker.h"
+#ifdef Q_OS_DARWIN
+#include "backend/macupdater.h"
+#endif
 #include "backend/computermanager.h"
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
@@ -1087,6 +1090,11 @@ int main(int argc, char *argv[])
     IdentityManager::get();
 
 #ifdef Q_OS_DARWIN
+    // Artemis for Mac's self-update (Settings › General shows it; the Artemis menu has its item)
+    qmlRegisterSingletonInstance("MacUpdater", 1, 0, "MacUpdater", MacUpdater::instance());
+#endif
+
+#ifdef Q_OS_DARWIN
     // Native macOS controls; the window draws on a translucent glass backdrop
     // (see NativeChrome), so it needs an alpha channel
     QQuickStyle::setStyle("macOS");
@@ -1176,9 +1184,20 @@ int main(int argc, char *argv[])
         // UI self-test script (test builds only), when MOONLIGHT_UI_PROBE asks for one
         UiProbe::startIfRequested(&engine);
 #endif
+#ifdef Q_OS_DARWIN
+        // Not for the command-line actions (stream, quit, pair), which exit when done
+        if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
+            MacUpdater::instance()->start();
+        }
+#endif
     }
 
     int err = app.exec();
+
+#ifdef Q_OS_DARWIN
+    // A downloaded update is swapped in once Artemis has exited
+    MacUpdater::instance()->installOnQuit();
+#endif
 
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
     // sometimes freezing and blocking process exit.

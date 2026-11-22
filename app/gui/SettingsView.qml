@@ -1766,6 +1766,14 @@ Flickable {
                 }
             }
         }
+
+        // macOS: Artemis updates itself (elsewhere upstream's toolbar button links to downloads)
+        Loader {
+            active: NativeChrome.enabled
+            visible: active && settingsPage.macSectionVisible("general")
+            width: uiSettingsGroupBox.width
+            source: "MacUpdatesBox.qml"
+        }
     }
 
     Column {

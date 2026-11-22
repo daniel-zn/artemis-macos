@@ -163,7 +163,7 @@ macx {
         CONFIG += discord-rpc libplacebo
     }
 
-    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework CoreAudio -framework AppKit -framework Metal -framework QuartzCore
+    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework CoreAudio -framework AppKit -framework Metal -framework QuartzCore -framework Security
     CONFIG += ffmpeg
 }
 
@@ -447,12 +447,16 @@ macx {
         streaming/audio/capture/micinput_mac.mm \
         streaming/quitduringstream.cpp \
         gui/nativechrome_mac.mm \
+        backend/macupdate.mm \
+        backend/macupdater.mm \
         settings/autoframerate_mac.mm \
         streaming/video/ffmpeg-renderers/vt_base.mm \
         streaming/video/ffmpeg-renderers/vt_avsamplelayer.mm \
         streaming/video/ffmpeg-renderers/vt_metal.mm
 
     HEADERS += \
+        backend/macupdate.h \
+        backend/macupdater.h \
         streaming/quitduringstream.h \
         streaming/video/ffmpeg-renderers/vt.h
 }

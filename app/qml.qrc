@@ -7,6 +7,7 @@
         <file>gui/MacAppRow.qml</file>
         <file>gui/MacSpacing.js</file>
         <file>gui/MacMenuBar.qml</file>
+        <file>gui/MacUpdatesBox.qml</file>
         <file>gui/ActivitySpinner.qml</file>
         <file>gui/SettingsView.qml</file>
         <file>gui/StreamSegue.qml</file>

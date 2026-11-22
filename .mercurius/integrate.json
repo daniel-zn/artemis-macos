@@ -37,6 +37,15 @@
         "tests/automouse/**"
       ],
       "timeout": 10
+    },
+    {
+      "name": "macupdate-unit",
+      "run": "mkdir -p build/tests-macupdate && cd build/tests-macupdate && qmake6 ../../tests/macupdate CONFIG+=sdk_no_version_check >/dev/null && make -s && ./tst_macupdate",
+      "inputs": [
+        "app/backend/macupdate.*",
+        "tests/macupdate/**"
+      ],
+      "timeout": 10
     }
   ]
 }

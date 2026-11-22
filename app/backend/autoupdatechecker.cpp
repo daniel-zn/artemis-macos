@@ -35,7 +35,7 @@ void AutoUpdateChecker::start()
     }
 
 #ifdef Q_OS_DARWIN
-    // Artemis doesn't follow upstream Moonlight's releases: no update check on macOS
+    // Artemis doesn't follow upstream Moonlight's releases: macOS updates itself from danielzn.com (MacUpdater)
     qInfo() << "Update check is off in Artemis";
 #endif
 #if defined(Q_OS_WIN32) || defined(STEAM_LINK) || defined(APP_IMAGE) // Only run update checker on platforms without auto-update
