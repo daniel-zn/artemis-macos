@@ -1876,6 +1876,24 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: macShortcutsCheck
+                    visible: Qt.platform.os === "osx"
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Use Mac keyboard shortcuts")
+                    font.pointSize: settingsPage.bodyPointSize
+                    checked: StreamingPreferences.macShortcuts
+                    onCheckedChanged: {
+                        StreamingPreferences.macShortcuts = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Command works as Ctrl on the host, so Command+C, Command+V, Command+Z and the rest do what they do on a Mac. Command+arrows and Option+arrows move like on a Mac, Control+Command works as the Windows key, and Control+click is a right-click.")
+                }
+
+                CheckBox {
                     id: absoluteTouchCheck
                     hoverEnabled: true
                     width: parent.width

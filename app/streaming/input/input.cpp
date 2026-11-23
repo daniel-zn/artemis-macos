@@ -19,6 +19,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_PointerRegionLockActive(false),
       m_PointerRegionLockToggledByUser(false),
+#ifdef Q_OS_DARWIN
+      m_MacShortcutsEnabled(prefs.macShortcuts),
+#else
+      m_MacShortcutsEnabled(false),
+#endif
       m_FakeMouseCaptureActive(false),
       m_KeyboardCaptureActive(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
@@ -63,6 +68,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
                             m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 #endif
+
+    // With Mac shortcuts, Cmd+click is the host's Ctrl+click and Ctrl+click is a right-click,
+    // as in VMware Fusion
+    SDL_SetHint(SDL_HINT_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK, m_MacShortcutsEnabled ? "1" : "0");
 
     // Opt-out of SDL's built-in Alt+Tab handling while keyboard grab is enabled
     SDL_SetHint(SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED, "0");

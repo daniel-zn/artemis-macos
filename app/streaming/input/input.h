@@ -5,6 +5,7 @@
 
 #include "SDL_compat.h"
 #include "automousemode.h"
+#include "macshortcuts.h"
 
 struct GamepadState {
     SDL_GameController* controller;
@@ -135,6 +136,8 @@ public:
 
     void raiseAllKeys();
 
+    void sendKey(short keyCode, bool down, char modifiers, char flags);
+
     void notifyMouseLeave();
 
     void notifyFocusLost();
@@ -228,6 +231,8 @@ private:
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<uint32_t> m_KeysDown;
+    bool m_MacShortcutsEnabled;
+    MacShortcuts m_MacShortcuts;
     bool m_FakeMouseCaptureActive;
     bool m_KeyboardCaptureActive;
     QString m_OldIgnoreDevices;

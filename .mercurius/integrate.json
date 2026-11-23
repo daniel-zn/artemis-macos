@@ -39,6 +39,15 @@
       "timeout": 10
     },
     {
+      "name": "macshortcuts-unit",
+      "run": "mkdir -p build/tests-macshortcuts && cd build/tests-macshortcuts && qmake6 ../../tests/macshortcuts CONFIG+=sdk_no_version_check >/dev/null && make -s && ./tst_macshortcuts",
+      "inputs": [
+        "app/streaming/input/macshortcuts.*",
+        "tests/macshortcuts/**"
+      ],
+      "timeout": 10
+    },
+    {
       "name": "macupdate-unit",
       "run": "mkdir -p build/tests-macupdate && cd build/tests-macupdate && qmake6 ../../tests/macupdate CONFIG+=sdk_no_version_check >/dev/null && make -s && ./tst_macupdate",
       "inputs": [

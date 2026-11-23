@@ -401,14 +401,14 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 modifiers |= MODIFIER_EXTENDED;
                 break;
             case SDL_SCANCODE_LGUI:
-                if (!isSystemKeyCaptureActive()) {
+                if (!m_MacShortcutsEnabled && !isSystemKeyCaptureActive()) {
                     return;
                 }
                 keyCode = 0x5B;
                 modifiers |= MODIFIER_EXTENDED;
                 break;
             case SDL_SCANCODE_RGUI:
-                if (!isSystemKeyCaptureActive()) {
+                if (!m_MacShortcutsEnabled && !isSystemKeyCaptureActive()) {
                     return;
                 }
                 keyCode = 0x5C;
@@ -502,26 +502,38 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
     }
 
-    keyCode |= 0x8000;
     flags = shouldNotConvertToScanCodeOnServer ? SS_KBE_FLAG_NON_NORMALIZED : 0;
 
+    if (m_MacShortcutsEnabled) {
+        for (const MacShortcuts::HostKey& key : m_MacShortcuts.key(keyCode, event->state == SDL_PRESSED,
+                                                                   modifiers & MODIFIER_EXTENDED)) {
+            sendKey(key.vk, key.down, key.modifiers, key.vk == keyCode ? flags : 0);
+        }
+        return;
+    }
+
+    sendKey(keyCode, event->state == SDL_PRESSED, modifiers, flags);
+}
+
+void SdlInputHandler::sendKey(short keyCode, bool down, char modifiers, char flags)
+{
+    keyCode |= 0x8000;
+
     // Track the key state so we always know which keys are down
-    if (event->state == SDL_PRESSED) {
+    if (down) {
         m_KeysDown.insert(MAKE_KEYPRESS_STATE(keyCode, modifiers, flags));
     }
     else {
         m_KeysDown.remove(MAKE_KEYPRESS_STATE(keyCode, modifiers, flags));
     }
 
-    LiSendKeyboardEvent2(keyCode,
-                         event->state == SDL_PRESSED ?
-                             KEY_ACTION_DOWN : KEY_ACTION_UP,
-                         modifiers,
-                         flags);
+    LiSendKeyboardEvent2(keyCode, down ? KEY_ACTION_DOWN : KEY_ACTION_UP, modifiers, flags);
 }
 
 void SdlInputHandler::raiseAllKeys()
 {
+    m_MacShortcuts.reset();
+
     if (m_KeysDown.isEmpty()) {
         return;
     }

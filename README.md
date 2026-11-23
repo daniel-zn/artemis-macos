@@ -75,6 +75,31 @@ What it adds on top of upstream Moonlight:
   follows the new mode. Ctrl+Alt+Shift+M still switches the mouse mode by hand (until the stream ends or the window
   mode changes) and Ctrl+Alt+Shift+Z releases the mouse. Upstream's "Optimize mouse for remote desktop instead of
   games" checkbox (and the command line's `--absolute-mouse`) is gone; its saved value is dropped.
+- **Mac keyboard shortcuts on the host** (macOS only; Settings > Keyboard & Mouse > **Use Mac keyboard shortcuts**,
+  on by default, for every host). Command works as Ctrl, the way Parallels, VMware Fusion, Windows App and Jump
+  Desktop do it, so ⌘C, ⌘V, ⌘X, ⌘A, ⌘Z, ⌘F, ⌘S, ⌘W and the rest do what they do on a Mac, and ⌘-click is
+  Ctrl+click. The Mac text shortcuts that aren't Ctrl+key on Windows are translated
+  (`app/streaming/input/macshortcuts.h`, tested in `tests/macshortcuts`):
+
+  | On the Mac | On the host |
+  |---|---|
+  | ⌘ + key | Ctrl + key |
+  | ⌘← / ⌘→ | Home / End |
+  | ⌘↑ / ⌘↓ | Ctrl+Home / Ctrl+End |
+  | ⌘⌫ | Shift+Home, Backspace (delete to the start of the line) |
+  | ⇧⌘Z | Ctrl+Y (redo) |
+  | ⌥← / ⌥→ | Ctrl+← / Ctrl+→ (a word at a time) |
+  | ⌥⌫ / ⌥⌦ | Ctrl+Backspace / Ctrl+Delete |
+  | ⌘Tab (when system keys are captured) | Alt+Tab |
+  | ⌃⌘ + key | Win + key (⌃⌘R = Win+R) |
+  | ⌃-click | right-click |
+
+  Shift passes through (⇧⌘← selects to the line start). ⌃ stays the real Ctrl and ⌥ stays Alt. ⌘Q stays
+  Artemis's (it disconnects) and the Ctrl+Alt+Shift combinations are unchanged. With the setting off, ⌘ is
+  dropped as upstream does (or sent as the Windows key while system keys are captured).
+- **Copied text is shared with Apollo hosts** (Settings > Host PC > **Share copied text with the host PC**):
+  text copied on the Mac is sent when the session starts or gets focus and whenever it changes; text copied on the
+  host (⌘C or ⌘X in the session, or anything when the session loses focus) comes back to the Mac.
 - **Native macOS look** (macOS only; Windows and Linux keep upstream's Material look, apart from tooltips now
   wrapping at 400 px as upstream intended):
   - A native toolbar with SF Symbols in the title bar, drawn on Liquid Glass on macOS 26 and later.
